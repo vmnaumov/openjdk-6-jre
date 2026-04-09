@@ -4,14 +4,19 @@ on: workflow_dispatch
 
 jobs:
   assemble-jre-armhf:
+    strategy:
+      matrix:
+        include:
+          - arch: "armhf"
+            lib_arch: "arm-linux-gnueabihf"
     env:
-      ARCH: "armhf"
-      LIB_ARCH: "arm-linux-gnueabihf"
-      OPENJDK_JRE_PACKAGE: "https://snapshot.debian.org/archive/debian/20170518T093838Z/pool/main/o/openjdk-6/openjdk-6-jre_6b41-1.13.13-1_${{ ARCH }}.deb"
-      OPENJDK_JRE_HEADLESS_PACKAGE: "https://snapshot.debian.org/archive/debian/20170518T093838Z/pool/main/o/openjdk-6/openjdk-6-jre-headless_6b41-1.13.13-1_${{ env.ARCH }}.deb"
+      ARCH: ${{ matrix.arch }}
+      LIB_ARCH: ${{ matrix.lib_arch }}
+      OPENJDK_JRE_PACKAGE: "https://snapshot.debian.org/archive/debian/20170518T093838Z/pool/main/o/openjdk-6/openjdk-6-jre_6b41-1.13.13-1_${{ matrix.arch }}.deb"
+      OPENJDK_JRE_HEADLESS_PACKAGE: "https://snapshot.debian.org/archive/debian/20170518T093838Z/pool/main/o/openjdk-6/openjdk-6-jre-headless_6b41-1.13.13-1_${{ matrix.arch }}.deb"
       OPENJDK_JRE_LIB_PACKAGE: "https://snapshot.debian.org/archive/debian/20170518T034509Z/pool/main/o/openjdk-6/openjdk-6-jre-lib_6b41-1.13.13-1_all.deb"
       LIBATK_PACKAGE: "https://snapshot.debian.org/archive/debian/20180227T161438Z/pool/main/j/java-atk-wrapper/libatk-wrapper-java_0.33.3-20_all.deb"
-      LIBATK_JNI_PACKAGE: "https://snapshot.debian.org/archive/debian/20180227T161438Z/pool/main/j/java-atk-wrapper/libatk-wrapper-java-jni_0.33.3-20_${{ env.ARCH }}.deb"
+      LIBATK_JNI_PACKAGE: "https://snapshot.debian.org/archive/debian/20180227T161438Z/pool/main/j/java-atk-wrapper/libatk-wrapper-java-jni_0.33.3-20_${{ matrix.arch }}.deb"
       MEDIA_TYPES_PACKAGE: "https://snapshot.debian.org/archive/debian/20251014T150515Z/pool/main/m/media-types/media-types_14.0.0_all.deb"
       CERTIFICATES_JAVA_PACKAGE: "https://snapshot.debian.org/archive/debian/20260312T142611Z/pool/main/c/ca-certificates-java/ca-certificates-java_20260311_all.deb"
     runs-on: ubuntu-latest
@@ -19,19 +24,19 @@ jobs:
       - name: Downloading debian ${{ env.ARCH }} packages
         run: |
           
-          wget -nv ${{ OPENJDK_JRE_PACKAGE }} \
+          wget -nv ${{ env.OPENJDK_JRE_PACKAGE }} \
             -O openjdk-jre.deb
-          wget -nv ${{ OPENJDK_JRE_HEADLESS_PACKAGE }} \
+          wget -nv ${{ env.OPENJDK_JRE_HEADLESS_PACKAGE }} \
             -O openjdk-jre-headless.deb
-          wget -nv ${{ OPENJDK_JRE_LIB_PACKAGE}} \
+          wget -nv ${{ env.OPENJDK_JRE_LIB_PACKAGE}} \
             -O openjdk-jre-lib.deb   
-          wget -nv ${{ LIBATK_PACKAGE }} \
+          wget -nv ${{ env.LIBATK_PACKAGE }} \
             -O libatk-wrapper-java.deb
-          wget -nv ${{ LIBATK_JNI_PACKAGE }} \
+          wget -nv ${{ env.LIBATK_JNI_PACKAGE }} \
             -O libatk-wrapper-java-jni.deb
-          wget -nv ${{ MEDIA_TYPES_PACKAGE }} \
+          wget -nv ${{ env.MEDIA_TYPES_PACKAGE }} \
             -O media-types.deb
-          wget -nv ${{ CERTIFICATES_JAVA_PACKAGE }} \
+          wget -nv ${{ env.CERTIFICATES_JAVA_PACKAGE }} \
             -O ca-certificates-java.deb
 
       - name: Unpack debian packages
@@ -56,48 +61,48 @@ jobs:
           cp -r openjdk-jre-headless/* openjdk-jre/
           rm -rf openjdk-jre-headless
           
-          rm openjdk-jre/usr/lib/jvm/java-6-openjdk-$ARCH/jre/lib/cmm
+          rm openjdk-jre/usr/lib/jvm/java-6-openjdk-${{ env.ARCH}}/jre/lib/cmm
           cp --remove-destination -r openjdk-jre-lib/usr/lib/jvm/java-6-openjdk-common/jre/* \
-            openjdk-jre/usr/lib/jvm/java-6-openjdk-$ARCH/jre
+            openjdk-jre/usr/lib/jvm/java-6-openjdk-${{ env.ARCH}}/jre
           rm -rf openjdk-jre-lib
           
-          cp --remove-destination openjdk-jre/etc/java-6-openjdk/jvm-$ARCH.cfg \
-            openjdk-jre/usr/lib/jvm/java-6-openjdk-$ARCH/jre/lib/arm/jvm.cfg
-          cp --remove-destination openjdk-jre/usr/lib/jvm/java-6-openjdk-$ARCH/jre/lib/arm/libjsig.so \
-            openjdk-jre/usr/lib/jvm/java-6-openjdk-$ARCH/jre/lib/arm/server/libjsig.so
+          cp --remove-destination openjdk-jre/etc/java-6-openjdk/jvm-${{ env.ARCH}}.cfg \
+            openjdk-jre/usr/lib/jvm/java-6-openjdk-${{ env.ARCH}}/jre/lib/arm/jvm.cfg
+          cp --remove-destination openjdk-jre/usr/lib/jvm/java-6-openjdk-${{ env.ARCH}}/jre/lib/arm/libjsig.so \
+            openjdk-jre/usr/lib/jvm/java-6-openjdk-${{ env.ARCH}}/jre/lib/arm/server/libjsig.so
           
           cp --remove-destination -r openjdk-jre/etc/java-6-openjdk/* \
-            openjdk-jre/usr/lib/jvm/java-6-openjdk-$ARCH/jre/lib
+            openjdk-jre/usr/lib/jvm/java-6-openjdk-${{ env.ARCH}}/jre/lib
           
           cp --remove-destination libatk-wrapper-java/usr/share/java/java-atk-wrapper.jar \
-            openjdk-jre/usr/lib/jvm/java-6-openjdk-$ARCH/jre/lib/ext
+            openjdk-jre/usr/lib/jvm/java-6-openjdk-${{ env.ARCH}}/jre/lib/ext
           rm -rf libatk-wrapper-java
           
           cp --remove-destination libatk-wrapper-java-jni/usr/lib/$LIB_ARCH/jni/libatk-wrapper.so.6.0.0 \
-            openjdk-jre/usr/lib/jvm/java-6-openjdk-$ARCH/jre/lib/ext/libatk-wrapper.so
+            openjdk-jre/usr/lib/jvm/java-6-openjdk-${{ env.ARCH}}/jre/lib/ext/libatk-wrapper.so
           rm -rf libatk-wrapper-java-jni
           
           cp --remove-destination media-types/etc/mime.types \
-            openjdk-jre/usr/lib/jvm/java-6-openjdk-$ARCH/jre/lib
+            openjdk-jre/usr/lib/jvm/java-6-openjdk-${{ env.ARCH}}/jre/lib
           rm -rf media-types
           cp --remove-destination ca-certificates-java/etc/default/cacerts \
-            openjdk-jre/usr/lib/jvm/java-6-openjdk-$ARCH/jre/lib/security
+            openjdk-jre/usr/lib/jvm/java-6-openjdk-${{ env.ARCH}}/jre/lib/security
           rm -rf ca-certificates-java
           
-          rm -rf openjdk-jre/usr/lib/jvm/java-6-openjdk-$ARCH/jre/man/ja*
+          rm -rf openjdk-jre/usr/lib/jvm/java-6-openjdk-${{ env.ARCH}}/jre/man/ja*
           
-          cp -r openjdk-jre/usr/lib/jvm/java-6-openjdk-$ARCH/jre jre
+          cp -r openjdk-jre/usr/lib/jvm/java-6-openjdk-${{ env.ARCH}}/jre jre
           rm -rf openjdk-jre
           
           du -d 2 -h jre
 
       - name: Compress
         run: |          
-          zip -r jre-6-$ARCH.zip jre
-          du -h jre-6-$ARCH.zip
+          zip -r jre-6-${{ matrix.ARCH }}.zip jre
+          du -h jre-6-${{ matrix.ARCH }}.zip
 
-#      - name: Create jre $ARCH release
+#      - name: Create jre ${{ env.ARCH}} release
 #        uses: softprops/action-gh-release@v2
 #        with:
 #          files: |
-#            jre-6-$ARCH.zip
+#            jre-6-${{ env.ARCH}}.zip
